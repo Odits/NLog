@@ -7,6 +7,9 @@
 #include <iomanip>
 #include <sstream>
 
+static bool first = true;
+#define VERSION "313.1"
+
 
 std::string getTime()
 {
@@ -38,6 +41,7 @@ NLogger::LineLogger::LineLogger(NLogger &_nlogger) : nlogger(_nlogger)
 	if (os)
 		*os << nlogger.msg;
 	*log_file << nlogger.msg;
+	nlogger.msg.clear();
 }
 
 
@@ -54,12 +58,25 @@ NLogger::LineLogger::~LineLogger()
 }
 
 
-NLogger::NLogger(const char* _func_name, const char* _path, int line_num, const char* _log_path, rules _rule, bool _on_time, bool _on_path, bool _on_line) :
+NLogger::NLogger(const char* _func_name, const char* _path, int line_num, bool _on_time, bool _on_path, bool _on_line, const char* _log_path, rules _rule) :
 	func_name(_func_name), rule(_rule), log_path(_log_path), path(_path), on_time(_on_time), on_path(_on_path), on_line(_on_line)
 {
+	if (on_path)
+	{
+		std::size_t found = path.find_last_of("/\\");
+		path = path.substr(found + 1);
+	}
+	if (first)
+	{
+		msg = "\nversion = " + std::string(VERSION) + "\n";
+		first = false;
+	}
 	info(line_num) << "-------------------Enter " + func_name + "-------------------";
 }
 
+NLogger::NLogger(const char* _func_name, const char* _path, int line_num, const char* _log_path, rules _rule, bool _on_time, bool _on_path, bool _on_line) :
+	NLogger(_func_name, _path, line_num, _on_time, _on_path, _on_line, _log_path, _rule)
+{	}
 
 void NLogger::end(int line)
 {
@@ -72,6 +89,7 @@ NLogger::~NLogger()
 	info(end_line) << "------------------- Exit " + func_name + "-------------------";
 }
 
+
 NLogger::LineLogger NLogger::output(const char* level, int line_num)
 {
 	std::string tmp;
@@ -82,7 +100,7 @@ NLogger::LineLogger NLogger::output(const char* level, int line_num)
 	if (on_line)
 		tmp += "line:" + std::to_string(line_num) + " ";
 
-	msg = tmp + level;
+	msg += tmp + level;
 	return LineLogger(*this);
 }
 
@@ -99,4 +117,17 @@ NLogger::LineLogger NLogger::warn(int line_num)
 NLogger::LineLogger NLogger::error(int line_num)
 {
 	return output("[ERROR] ", line_num);
+}
+
+void NLogger::hex(int line_num, const char* str_name, const char* str, int len)
+{
+	std::ostringstream oss;
+	if (len > 32)	oss << "\n\t";
+    oss << std::hex << std::uppercase << std::setfill('0');
+    for (int i = 0; i < len; i++)
+	{
+		if (i && 0 == i % 42)	oss << "\n\t";
+        oss << std::setw(2) << static_cast<int>(str[i]) << ' ';
+	}
+	info(line_num) << str_name << "(HEX) = " << oss.str();
 }

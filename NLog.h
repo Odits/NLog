@@ -31,7 +31,8 @@ public:
 			return *this;
 		}
 	};
-	NLogger();
+
+	NLogger(const char* _func_name, const char* _path, int line_num, bool _on_time = false, bool _on_path = false, bool _on_line = true, const char* _log_path = "", rules _rule = toConsole);
 
 	NLogger(const char* _func_name, const char* _path, int line_num, const char* _log_path = "", rules _rule = toConsole, bool _on_time = false, bool _on_path = false, bool _on_line = true);
 
@@ -47,14 +48,34 @@ public:
 
 	LineLogger error(int line_num);
 
+	void hex(int line_num, const char* str_name, const char* str, int len);
+
 private:
 	bool on_time, on_path, on_line;
 	std::string func_name, msg, path, log_path;
 	int end_line = 0;
-	rules rule = toConsole;
+	rules rule;
 };
 
 
+#define NLOGGER \
+	NLogger nlog(__func__, __FILE__, __LINE__)
+
+#define LOG_INFO \
+	nlog.info(__LINE__)
+
+#define LOG_WARN \
+	nlog.warn(__LINE__)
+
+#define LOG_ERROR \
+	nlog.error(__LINE__)
+
+#define LOG_HEX(msg, len) \
+	nlog.hex(__LINE__, #msg, msg, len)
+
+#define LOG_return \
+	nlog.end(__LINE__); \
+	return
 
 
-#endif //_NLOG_H_
+#endif // _NLOG_H_
