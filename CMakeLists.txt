@@ -10,7 +10,7 @@ set(PROJECT_SOURCES
 	NLog.cpp
 	NLog.h
 	main.cpp
-	NLog_define.h
+	# NLog_define.h
 )
 
 add_executable(

@@ -23,7 +23,7 @@ std::string getTime()
 }
 
 
-NLogger::LineLogger::LineLogger(NLogger &_nlogger) : nlogger(_nlogger)
+NLog::LineLogger::LineLogger(NLog &_nlogger) : nlogger(_nlogger)
 {
 	log_file = new std::ofstream();
 	switch (nlogger.rule)
@@ -45,7 +45,7 @@ NLogger::LineLogger::LineLogger(NLogger &_nlogger) : nlogger(_nlogger)
 }
 
 
-NLogger::LineLogger::~LineLogger()
+NLog::LineLogger::~LineLogger()
 {
 	if (os)
 		*os << std::endl;
@@ -58,7 +58,7 @@ NLogger::LineLogger::~LineLogger()
 }
 
 
-NLogger::NLogger(const char* _func_name, const char* _path, int line_num, bool _on_time, bool _on_path, bool _on_line, const char* _log_path, rules _rule) :
+NLog::NLog(const char* _func_name, const char* _path, int line_num, bool _on_time, bool _on_path, bool _on_line, const char* _log_path, rules _rule) :
 	func_name(_func_name), rule(_rule), log_path(_log_path), path(_path), on_time(_on_time), on_path(_on_path), on_line(_on_line)
 {
 	if (on_path)
@@ -71,26 +71,25 @@ NLogger::NLogger(const char* _func_name, const char* _path, int line_num, bool _
 		msg = "\nversion = " + std::string(VERSION) + "\n";
 		first = false;
 	}
-	info(line_num) << "-------------------Enter " + func_name + "-------------------";
+	if (!func_name.empty())
+		info(line_num) << "-------------------Enter " + func_name + "-------------------";
 }
 
-NLogger::NLogger(const char* _func_name, const char* _path, int line_num, const char* _log_path, rules _rule, bool _on_time, bool _on_path, bool _on_line) :
-	NLogger(_func_name, _path, line_num, _on_time, _on_path, _on_line, _log_path, _rule)
-{	}
 
-void NLogger::end(int line)
+void NLog::end(int line)
 {
 	end_line = line;
 }
 
 
-NLogger::~NLogger()
+NLog::~NLog()
 {
-	info(end_line) << "------------------- Exit " + func_name + "-------------------";
+	if (!func_name.empty())
+		info(end_line) << "------------------- Exit " + func_name + "-------------------";
 }
 
 
-NLogger::LineLogger NLogger::output(const char* level, int line_num)
+NLog::LineLogger NLog::output(const char* level, int line_num)
 {
 	std::string tmp;
 	if (on_time)
@@ -104,22 +103,22 @@ NLogger::LineLogger NLogger::output(const char* level, int line_num)
 	return LineLogger(*this);
 }
 
-NLogger::LineLogger NLogger::info(int line_num)
+NLog::LineLogger NLog::info(int line_num)
 {
 	return output("[INFO] ", line_num);
 }
 
-NLogger::LineLogger NLogger::warn(int line_num)
+NLog::LineLogger NLog::warn(int line_num)
 {
 	return output("[WARN] ", line_num);
 }
 
-NLogger::LineLogger NLogger::error(int line_num)
+NLog::LineLogger NLog::error(int line_num)
 {
 	return output("[ERROR] ", line_num);
 }
 
-void NLogger::hex(int line_num, const char* str_name, const char* str, int len)
+void NLog::hex(int line_num, const char* str_name, const char* str, int len)
 {
 	std::ostringstream oss;
 	if (len > 32)	oss << "\n\t";
@@ -130,4 +129,26 @@ void NLogger::hex(int line_num, const char* str_name, const char* str, int len)
         oss << std::setw(2) << static_cast<int>(str[i]) << ' ';
 	}
 	info(line_num) << str_name << "(HEX) = " << oss.str();
+}
+
+//静态函数
+NLog::LineLogger NLog::s_info(int line_num, const char* _path)
+{
+	NLog nlog("", _path, line_num, true, true, true);
+	
+	return nlog.info(line_num);
+}
+
+NLog::LineLogger NLog::s_warn(int line_num, const char *_path)
+{
+	NLog nlog("", _path, line_num, true, true, true);
+	
+	return nlog.warn(line_num);
+}
+
+NLog::LineLogger NLog::s_error(int line_num, const char *_path)
+{
+	NLog nlog("", _path, line_num, true, true, true);
+	
+	return nlog.error(line_num);
 }
