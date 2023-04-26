@@ -3,16 +3,16 @@
 #include "NLog.h"
 
 #define NLOGGER \
-	NLog nlog(__func__, __FILE__, __LINE__, true, false, true, "./log.txt", NLog::rules::toBoth)
+	NLog nlog(__func__, __FILE__, __LINE__, true, true, "./log.txt", NLog::rules::toBoth)
 
 #define VERSION "v313.2"
 
 int func1()
 {
 	NLOGGER;
-	LOG_INFO << "this is info log:" << std::string("123");
-	LOG_WARN << "this is warn log:" << std::string("456");
-	LOG_ERROR << "this is error log:" << std::string("789");
+	NLOG_INFO << "this is info log:" << std::string("123");
+	NLOG_WARN << "this is warn log:" << std::string("456");
+	NLOG_ERROR << "this is error log:" << std::string("789");
 
 	N_return 0;
 }
@@ -20,12 +20,12 @@ int func1()
 int func2()
 {
 	NLOGGER;
-	LOG_INFO << "this is info log" << std::string("123");
+	NLOG_INFO << "this is info log" << std::string("123");
 
 	char str1[320] = "7353454812341245756341245756253412457562573534548123412457562524523432432452343243";
 
 	// nlog.hex(__LINE__, "str", str, 31);
-	LOG_HEX(str1, strlen(str1));
+	NLOG_HEX(str1, strlen(str1));
 
 	N_return 0;
 }
@@ -54,7 +54,7 @@ int func4()
 
 int main()
 {
-	NLog nlog(__func__, __FILE__, __LINE__, "./log.txt", NLog::rules::toBoth, true, true, true);
+	NLog nlog(__func__, __FILE__, __LINE__, "./log.txt", NLog::rules::toBoth, true, true);
 	nlog.info(__LINE__) << "this is info log" << std::string("123");
 	nlog.warn(__LINE__) << "this is warn log" << std::string("456");
 	nlog.error(__LINE__) << "this is error log" << std::string("789");
