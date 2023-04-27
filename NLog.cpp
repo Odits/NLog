@@ -22,7 +22,13 @@ std::string getTime()
 	return ss.str();
 }
 
-NLog::LineLogger::LineLogger(NLog &_nlogger) : nlogger(_nlogger)
+// 定义颜色
+#define GREEN	"\033[0;32m"
+#define YELLOW	"\033[0;33m"
+#define RED		"\033[0;31m"
+#define RESET	"\033[0m"
+
+NLog::LineLogger::LineLogger(NLog &_nlogger, levels level) : nlogger(_nlogger)
 {
 	log_file = new std::ofstream();
 	switch (nlogger.rule)
@@ -38,7 +44,21 @@ NLog::LineLogger::LineLogger(NLog &_nlogger) : nlogger(_nlogger)
 		log_file->open(nlogger.log_path, std::ios::app);
 	}
 	if (os)
-		*os << nlogger.msg;
+	{
+		switch (level)
+		{
+		case levels::l_info:
+			*os << GREEN << nlogger.msg;
+			break;
+		case levels::l_warn:
+			*os << YELLOW << nlogger.msg;
+			break;
+		case levels::l_error:
+			*os << RED << nlogger.msg;
+			break;
+		}
+	}
+		
 	*log_file << nlogger.msg;
 	nlogger.msg.clear();
 }
@@ -46,7 +66,7 @@ NLog::LineLogger::LineLogger(NLog &_nlogger) : nlogger(_nlogger)
 NLog::LineLogger::~LineLogger()
 {
 	if (os)
-		*os << std::endl;
+		*os << RESET << std::endl;
 	*log_file << std::endl;
 	if (log_file->is_open())
 	{
@@ -63,9 +83,10 @@ NLog::NLog(const char *_func_name, const char *_path, int line_num, bool _on_tim
 		std::size_t found = path.find_last_of("/\\");
 		path = path.substr(found + 1);
 	}
-	if (first)
+	if (first && rule > 1)
 	{
 		msg = "\nversion = " + std::string(VERSION) + "\n";
+		// info(line_num) << "version = " << VERSION;
 		first = false;
 	}
 	if (!func_name.empty())
@@ -85,7 +106,7 @@ NLog::~NLog()
 
 static int tmp_len = 0;
 
-NLog::LineLogger NLog::output(const char *level, int line_num)
+NLog::LineLogger NLog::output(NLog::levels level, int line_num)
 {
 	std::string tmp;
 	if (on_time)
@@ -101,23 +122,31 @@ NLog::LineLogger NLog::output(const char *level, int line_num)
         tmp_len = tmp.size();
     }
 
-	msg += tmp + level;
-	return LineLogger(*this);
+	switch (level)
+	{
+	case levels::l_info:
+		msg += tmp + "[INFO] ";		break;
+	case levels::l_warn:
+		msg += tmp + "[WARN] ";		break;
+	case levels::l_error:
+		msg += tmp + "[ERROR] ";	break;
+	}
+	return LineLogger(*this, level);
 }
 
 NLog::LineLogger NLog::info(int line_num)
 {
-	return output("[INFO] ", line_num);
+	return output(NLog::levels::l_info, line_num);
 }
 
 NLog::LineLogger NLog::warn(int line_num)
 {
-	return output("[WARN] ", line_num);
+	return output(NLog::levels::l_warn, line_num);
 }
 
 NLog::LineLogger NLog::error(int line_num)
 {
-	return output("[ERROR] ", line_num);
+	return output(NLog::levels::l_error, line_num);
 }
 
 void NLog::hex(int line_num, const char *str_name, const char *str, int len)
@@ -188,6 +217,7 @@ int messLog(const char *log_path, char const *_sourcefilename, size_t line, int 
 	if (mode == 1)
 	{
 		nlog.hex(line, "", logdata, logdatalen);
+		return 0;
 	}
 	std::string logstr(logdata, logdatalen);
 	switch (level)

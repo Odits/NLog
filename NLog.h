@@ -11,7 +11,8 @@ std::string getTime();
 class NLog
 {
 public:
-	enum rules { none, toConsole, toFile, toBoth };
+	enum rules	{ none, toConsole, toFile, toBoth };
+	enum levels	{ l_info, l_warn, l_error };
 	class LineLogger
 	{
 	private:
@@ -19,7 +20,7 @@ public:
 		std::ostream *os = nullptr;
 		std::ofstream *log_file;
 	public:
-		LineLogger(NLog &_nlogger);
+		LineLogger(NLog &_nlogger, levels level);
 		~LineLogger();
 
 		template <typename T>
@@ -47,7 +48,7 @@ public:
 
 	~NLog();
 
-	LineLogger output(const char* level, int line_num);
+	LineLogger output(levels level, int line_num);
 
 	LineLogger info(int line_num);   //函数返回一个临时对象，该对象在析构时会自动添加换行符。
 

@@ -61,7 +61,7 @@ int main()
 
 	// func1();
 	// func2();
-	func3();
+	// func3();
 	func4();
 	nlog.end(__LINE__);	return 0;
 }
